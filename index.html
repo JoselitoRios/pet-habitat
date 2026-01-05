@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetHabitat - Tu Mejor Amigo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>">
+    
+    <style>
+        /* --- VARIABLES DE DISEÑO (TEMA CLARO / OSCURO) --- */
+        :root {
+            /* Tema Claro */
+            --bg-body: #FFFBF0; /* Crema suave */
+            --bg-card: #FFFFFF;
+            --text-main: #2D3436;
+            --text-sec: #636E72;
+            --primary: #FF7675; /* Coral amigable */
+            --primary-hover: #D63031;
+            --accent: #74B9FF; /* Azul cielo */
+            --vet-btn: #00B894; /* Verde menta */
+            --shadow: 0 10px 20px rgba(0,0,0,0.08);
+            --radius: 25px;
+            --modal-bg: #FFFFFF;
+            --bar-bg: #DFE6E9;
+        }
+
+        /* Tema Oscuro */
+        body.dark-mode {
+            --bg-body: #1E272E;
+            --bg-card: #2D3436;
+            --text-main: #DFE6E9;
+            --text-sec: #B2BEC3;
+            --primary: #FF7675; 
+            --primary-hover: #FF5252;
+            --accent: #0984E3;
+            --shadow: 0 10px 20px rgba(0,0,0,0.4);
+            --modal-bg: #2D3436;
+            --bar-bg: #636E72;
+        }
+
+        /* --- ESTILOS GENERALES --- */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            transition: background 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header con degradado suave */
+        header {
+            background: linear-gradient(135deg, var(--primary), #FAB1A0);
+            padding: 3rem 1rem;
+            text-align: center;
+            color: white;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+            box-shadow: 0 10px 30px rgba(255, 118, 117, 0.3);
+            position: relative;
+        }
+
+        h1 { margin: 0; font-weight: 800; font-size: 3.5rem; letter-spacing: -1px; text-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+        p.subtitle { margin-top: 5px; font-size: 1.3rem; font-weight: 600; opacity: 0.95; }
+
+        /* Botón Flotante Modo Oscuro */
+        .theme-toggle {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.3); border: 2px solid white; color: white;
+            padding: 8px 15px; border-radius: 50px; cursor: pointer; font-weight: 800;
+            transition: 0.2s; font-family: 'Nunito', sans-serif;
+        }
+        .theme-toggle:hover { background: white; color: var(--primary); transform: scale(1.05); }
+
+        /* Panel de Control Flotante */
+        .controls-wrapper {
+            display: flex; justify-content: center; margin-top: -30px; padding: 0 20px; position: sticky; top: 10px; z-index: 100;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        body.dark-mode .controls { background: rgba(45, 52, 54, 0.9); border-color: #444; }
+
+        input[type="text"] {
+            padding: 12px 20px; border: none; border-radius: 30px; width: 200px;
+            background: var(--bg-body); color: var(--text-main); font-weight: 700; outline: none; font-family: inherit;
+        }
+        input[type="text"]:focus { ring: 2px solid var(--primary); }
+
+        /* Botones */
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 30px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit;
+        }
+        .btn:hover { transform: translateY(-3px); }
+        
+        .btn-filter { background: var(--bg-body); color: var(--text-sec); }
+        .btn-filter.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(255, 118, 117, 0.4); }
+        
+        .btn-vet { background: var(--vet-btn); color: white; display: flex; align-items: center; gap: 5px; }
+        .btn-vet:hover { box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4); }
+
+        /* Grid de Tarjetas */
+        .container {
+            max-width: 1200px; margin: 40px auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;
+            flex: 1; /* Para que ocupe espacio y empuje el footer */
+        }
+
+        .card {
+            background: var(--bg-card); border-radius: var(--radius); overflow: hidden;
+            box-shadow: var(--shadow); height: 380px; position: relative; cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-10px); }
+
+        .card-img-wrapper { height: 100%; width: 100%; overflow: hidden; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .card:hover .card-img { transform: scale(1.1); }
+
+        .card-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px; color: white; box-sizing: border-box;
+        }
+        .badge { background: var(--primary); padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; }
+
+        /* Modal (Pop-up) */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(8px); padding: 20px; box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: var(--modal-bg); width: 100%; max-width: 900px; max-height: 90vh;
+            border-radius: 30px; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-scroll { overflow-y: auto; }
+        
+        .modal-header { height: 300px; position: relative; flex-shrink: 0; }
+        .modal-header img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-title {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 30px; color: white; box-sizing: border-box;
+        }
+
+        .modal-body { padding: 30px; color: var(--text-main); }
+
+        /* Layout del Modal */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        
+        .data-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--bar-bg); padding: 8px 0; }
+        .data-row strong { color: var(--primary); }
+
+        /* Barras de Progreso */
+        .stat-bar { margin-bottom: 15px; }
+        .stat-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 700; margin-bottom: 5px; }
+        .progress-track { background: var(--bar-bg); height: 10px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 1s ease; }
+
+        .box { background: var(--bg-body); padding: 20px; border-radius: 20px; margin-bottom: 20px; border-left: 5px solid var(--primary); }
+        .box h3 { margin-top: 0; color: var(--primary); }
+
+        .close-btn {
+            position: absolute; top: 20px; right: 20px; background: white; color: #333;
+            width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 24px;
+            cursor: pointer; z-index: 10; font-weight: bold; transition: 0.2s;
+        }
+        .close-btn:hover { background: var(--primary); color: white; transform: rotate(90deg); }
+
+        /* FOOTER */
+        footer {
+            background-color: var(--bg-card);
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 50px;
+            border-top-left-radius: 50px;
+            border-top-right-radius: 50px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.05);
+            color: var(--text-sec);
+        }
+        footer p { margin: 5px 0; }
+        footer strong { color: var(--primary); font-weight: 800; }
+
+        @media (max-width: 768px) {
+            .controls-wrapper { position: static; margin-top: 20px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .modal-content { height: 100vh; border-radius: 0; max-height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
+        <h1>PetHabitat</h1>
+        <p class="subtitle">La Enciclopedia Canina Más Completa y Amigable</p>
+    </header>
+
+    <div class="controls-wrapper">
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="🔍 Buscar raza...">
+            
+            <div class="filters">
+                <button class="btn btn-filter active" onclick="filterDogs('all')">Todos</button>
+                <button class="btn btn-filter" onclick="filterDogs('pequeño')">Pequeños</button>
+                <button class="btn btn-filter" onclick="filterDogs('mediano')">Medianos</button>
+                <button class="btn btn-filter" onclick="filterDogs('grande')">Grandes</button>
+            </div>
+
+            <button class="btn btn-vet" onclick="findVets()">
+                📍 Veterinarias Cercanas
+            </button>
+        </div>
+    </div>
+
+    <div class="container" id="cardsContainer"></div>
+
+    <div class="modal-overlay" id="dogModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="modal-scroll">
+                <div class="modal-header">
+                    <img src="" alt="" id="modalImg">
+                    <div class="modal-title">
+                        <h2 id="modalTitle" style="margin:0; font-size: 2.5rem;">Nombre</h2>
+                        <span id="modalOrigin" style="opacity: 0.9; font-size: 1.1rem;">📍 Origen</span>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <div class="info-grid">
+                        <div>
+                            <h3 style="color:var(--primary); margin-bottom:15px;">📊 Ficha Técnica</h3>
+                            <div class="data-row"><span>📏 Tamaño:</span> <strong id="modalSize">...</strong></div>
+                            <div class="data-row"><span>⚖️ Peso:</span> <strong id="modalWeight">...</strong></div>
+                            <div class="data-row"><span>⏳ Vida:</span> <strong id="modalLife">...</strong></div>
+                            <div class="data-row"><span>🎨 Colores:</span> <strong id="modalColors">...</strong></div>
+                            <div class="data-row"><span>🧠 Carácter:</span> <strong id="modalTemp">...</strong></div>
+                        </div>
+
+                        <div>
+                            <h3 style="color:var(--primary); margin-bottom:15px;">⚡ Niveles</h3>
+                            
+                            <div class="stat-bar">
+                                <div class="stat-label"><span>Energía</span> <span>⚡</span></div>
+                                <div class="progress-track"><div id="barEnergy" class="progress-fill" style="background:#FDCB6E;"></div></div>
+                            </div>
+
+                            <div class="stat-bar">
+                                <div class="stat-label"><span>Cariño / Afecto</span> <span>❤️</span></div>
+                                <div class="progress-track"><div id="barAffect" class="progress-fill" style="background:#FF7675;"></div></div>
+                            </div>
+
+                            <div class="stat-bar">
+                                <div class="stat-label"><span>Facilidad de Entreno</span> <span>🎓</span></div>
+                                <div class="progress-track"><div id="barTrain" class="progress-fill" style="background:#74B9FF;"></div></div>
+                            </div>
+
+                            <div class="stat-bar">
+                                <div class="stat-label"><span>Necesidad de Aseo</span> <span>🚿</span></div>
+                                <div class="progress-track"><div id="barGroom" class="progress-fill" style="background:#A29BFE;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box">
+                        <h3>📖 Descripción</h3>
+                        <p id="modalDesc" style="line-height: 1.6;">...</p>
+                    </div>
+
+                    <div class="box" style="border-color: #55EFC4; background: rgba(85, 239, 196, 0.1);">
+                        <h3 style="color: #00b894;">🏥 Salud y Cuidados</h3>
+                        <p id="modalHealth" style="line-height: 1.6;">...</p>
+                    </div>
+
+                    <div class="box" style="border-color: #FDCB6E; background: rgba(253, 203, 110, 0.1);">
+                        <h3 style="color: #d35400;">💡 ¿Sabías qué?</h3>
+                        <p id="modalFunFact" style="font-style: italic;">...</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Creado por <strong>Josue Maranatha Rios Navarro</strong></p>
+        <p>&copy; 2026 PetHabitat - Todos los derechos reservados</p>
+    </footer>
+
+    <script>
+        /* --- BASE DE DATOS MASIVA (50 RAZAS CON DATOS REALES) --- */
+        // Stats: [Energía, Afecto, Entrenamiento, Aseo] (Escala 1-100)
+        
+        const dogs = [
+            {
+                name: "Chihuahua", size: "pequeño", origin: "México", life: "14-20 años", weight: "1-3 kg", colors: "Arena, Negro, Blanco",
+                desc: "El perro más pequeño del mundo. Tiene una personalidad desbordante, es valiente (a veces demasiado) y extremadamente leal a una sola persona. Ideal para apartamentos, pero no te dejes engañar por su tamaño, es un excelente perro de alarma.",
+                health: "Proteger del frío es vital. Problemas comunes: hipoglucemia, luxación de rótula y problemas dentales por su boca pequeña.",
+                funFact: "Los Aztecas creían que guiaban a las almas a través del inframundo.",
+                stats: [60, 90, 50, 20],
+                img: "https://www.purina.es/sites/default/files/2021-02/BREED%20Hero_0034_chihuahua_smooth.jpg"
+            },
+            {
+                name: "Golden Retriever", size: "grande", origin: "Escocia", life: "10-12 años", weight: "25-34 kg", colors: "Dorado, Crema",
+                desc: "La raza familiar por excelencia. Inteligente, paciente y gentil. Ama el agua, recuperar pelotas y estar con gente. Rara vez muerde o pelea, lo que lo hace pésimo guardián pero excelente amigo.",
+                health: "Propenso a displasia de cadera y cáncer. Requiere control de peso.",
+                funFact: "Pueden llevar un huevo crudo en la boca sin romperlo gracias a su 'boca suave'.",
+                stats: [90, 100, 95, 70],
+                img: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?q=80&w=800"
+            },
+            {
+                name: "Husky Siberiano", size: "grande", origin: "Rusia", life: "12-14 años", weight: "16-27 kg", colors: "Negro/Blanco, Gris",
+                desc: "Nacido para correr. Tiene una resistencia infinita y ojos penetrantes. Es independiente, un poco terco y muy dramático (aúlla mucho). Es un artista del escape, así que cuidado con las vallas.",
+                health: "Cataratas juveniles y displasia de cadera. Su denso pelaje requiere cepillado constante.",
+                funFact: "Su aullido puede escucharse a kilómetros de distancia.",
+                stats: [100, 60, 40, 80],
+                img: "https://static.wikia.nocookie.net/reinoanimalia/images/a/a9/Husky_siberiano_20.png/revision/latest?cb=20150513044750&path-prefix=es"
+            },
+            {
+                name: "Bulldog Francés", size: "pequeño", origin: "Francia", life: "10-12 años", weight: "8-14 kg", colors: "Fawn, Bringé",
+                desc: "El rey de la ciudad. No ladra mucho y no necesita mucho ejercicio. Sus orejas de murciélago y cara chata lo hacen inconfundible. Es muy payaso y cariñoso.",
+                health: "Problemas respiratorios graves (braquicéfalo). Sensible al calor extremo.",
+                funFact: "No pueden nadar porque su cabeza pesa más que su cuerpo.",
+                stats: [40, 95, 60, 30],
+                img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=800"
+            },
+            {
+                name: "Pastor Alemán", size: "grande", origin: "Alemania", life: "9-13 años", weight: "22-40 kg", colors: "Negro y Fuego",
+                desc: "Inteligencia y lealtad personificadas. Es un perro de trabajo versátil: policía, guía, rescate. Necesita un dueño que le dé tareas y liderazgo firme.",
+                health: "Muy propenso a displasia de cadera y torsión gástrica.",
+                funFact: "Fueron los primeros perros guía para ciegos en la historia.",
+                stats: [90, 80, 100, 60],
+                img: "https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?q=80&w=800"
+            },
+            {
+                name: "Poodle (Caniche)", size: "mediano", origin: "Alemania", life: "12-15 años", weight: "Varía", colors: "Blanco, Negro",
+                desc: "La segunda raza más inteligente del mundo. Atlético, elegante y fácil de entrenar. Su pelo rizado no se cae, siendo casi hipoalergénico.",
+                health: "Problemas oculares y de oído. Requiere peluquería regular.",
+                funFact: "Su corte de pelo 'ridículo' era originalmente para proteger sus articulaciones del agua fría.",
+                stats: [85, 80, 100, 95],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQer3QJKKQH5yoNV4CLLfZGwGCcMzuGgMsSO6atau2J7f6Tt-eSCleRkmU5oKDO1pQQF646qzD6KvIdLYG3chSQvW3dUBTjWyStYzdPnw&s=10"
+            },
+            {
+                name: "Beagle", size: "mediano", origin: "Inglaterra", life: "10-15 años", weight: "9-11 kg", colors: "Tricolor",
+                desc: "Un sabueso feliz guiado por su nariz. Si huele algo interesante, dejará de escucharte. Es ruidoso (aullidos) pero excelente con los niños.",
+                health: "Obesidad (son glotones) e infecciones de oído.",
+                funFact: "Snoopy es el Beagle más famoso del mundo.",
+                stats: [80, 90, 50, 40],
+                img: "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?q=80&w=800"
+            },
+            {
+                name: "Rottweiler", size: "grande", origin: "Alemania", life: "9-10 años", weight: "35-60 kg", colors: "Negro y Fuego",
+                desc: "Poderoso guardián que, bien entrenado, es un peluche gigante. Seguro de sí mismo y distante con extraños, pero amoroso con su familia.",
+                health: "Problemas cardíacos y cáncer de hueso.",
+                funFact: "En la antigüedad, llevaban el dinero de los carniceros en bolsas atadas al cuello.",
+                stats: [60, 80, 80, 30],
+                img: "https://images.unsplash.com/photo-1567752881298-894bb81f9379?q=80&w=800"
+            },
+            {
+                name: "Yorkshire Terrier", size: "pequeño", origin: "Inglaterra", life: "13-16 años", weight: "3 kg", colors: "Acero y Oro",
+                desc: "Pequeño pero con carácter. Se cree el jefe de la casa. Su pelo es sedoso y similar al humano. Excelente perro de alerta.",
+                health: "Problemas dentales y tráquea delicada.",
+                funFact: "Originalmente cazaban ratas en las minas de carbón.",
+                stats: [70, 80, 60, 90],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToAsYS-kBryHXZmYq6Gi6vwKbIMbDJwI8aLSNeSIMAmbqqBaAKnyU9GsyYywVkh3tH-7yKP_WDcCKE05zxBjB8qPyPzCs2gPTLGuYIGQ&s=10"
+            },
+            {
+                name: "Dachshund", size: "pequeño", origin: "Alemania", life: "12-16 años", weight: "7-14 kg", colors: "Rojo, Negro",
+                desc: "El famoso 'Salchicha'. Valiente, curioso y terco. Su forma alargada le permite entrar en madrigueras.",
+                health: "Muy delicados de la espalda (discos). No deben saltar.",
+                funFact: "Fue la primera mascota oficial de unos Juegos Olímpicos (Múnich 1972).",
+                stats: [60, 80, 40, 30],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsOYZAfj_s5uC2nTB6w0DLbFt597MxRnOROLcxJfrTTglIfRFcInEm-4uL1Sqm9kw1Kc68KaSKIEvpSTGQUHqlQzUsT6W5xBQg1y8Z0g&s=10"
+            },
+            {
+                name: "Boxer", size: "grande", origin: "Alemania", life: "10-12 años", weight: "25-32 kg", colors: "Leonado, Atigrado",
+                desc: "El payaso de los perros. Juguetón, salta mucho y adora a los niños. Nunca parece madurar, siempre actúa como cachorro.",
+                health: "Propenso a cáncer y problemas del corazón.",
+                funFact: "Se llaman Boxer porque 'boxean' con las patas delanteras al jugar.",
+                stats: [95, 90, 70, 20],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4NuKzBwtiLKL_xFDGGSaU2yzezAhf1RhwjRByzAL4_157Uj7dQi2qSIjQaCN9DVwXKDCzRGXytbgUeBt8Vewc0lqXdWyzRs5ia-aB7A&s=10"
+            },
+            {
+                name: "Gran Danés", size: "grande", origin: "Alemania", life: "7-10 años", weight: "50-80 kg", colors: "Arlequín, Negro",
+                desc: "El 'Apolo' canino. Gigante, elegante y muy dulce. A menudo intenta sentarse en el regazo de sus dueños a pesar de pesar 80kg.",
+                health: "Torsión gástrica es el enemigo #1. Requiere cama suave.",
+                funFact: "Scooby-Doo es un Gran Danés.",
+                stats: [50, 90, 60, 30],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQayr84MVfIkoCB4c1Skh64YkzvS5G9yQtoRLrQEUkzj2K1UGIQjfLgw0zpDytVkw9y5pyIs3fZR2VyAic-cOId_QQvT3LjY5s0oImJHg&s=10"
+            },
+            {
+                name: "Doberman", size: "grande", origin: "Alemania", life: "10-12 años", weight: "32-45 kg", colors: "Negro y Fuego",
+                desc: "Elegante y musculoso. Uno de los mejores guardianes del mundo. Es muy pegado a su dueño ('perro velcro').",
+                health: "Cardiomiopatía y problemas de sangre.",
+                funFact: "Creado por un recaudador de impuestos para su protección personal.",
+                stats: [90, 90, 90, 20],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRllEibDbFAqCDBF1eFFNdmkfh-pm9fNq5kZscvbjasU40JTmicDID3qQrwLC_5gFh7NBIMMFb1bUaYBV1T2AkEZlM8_B1wuk1dqM2IPYg&s=10"
+            },
+            {
+                name: "Shih Tzu", size: "pequeño", origin: "China", life: "10-16 años", weight: "4-7 kg", colors: "Dorado, Blanco",
+                desc: "Criado para ser compañero de emperadores. Su único trabajo es amar y ser amado. Pelo largo y lujoso.",
+                health: "Problemas oculares y respiratorios.",
+                funFact: "Su nombre significa 'Perro León'.",
+                stats: [40, 95, 50, 95],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqWbUmlFAaYK0NtcJjZJO5Wt0hBkkzxbphtdgGyI43Wk_4Ew8YnDAQFmCBXAjsc3qhnTgQeARY-eTeqEfM9n-7IRrdWPBaFnCxZORz-w&s=10"
+            },
+            {
+                name: "Pug", size: "pequeño", origin: "China", life: "12-15 años", weight: "6-8 kg", colors: "Arena, Negro",
+                desc: "Cómico y cariñoso. Sus ronquidos y arrugas son su sello. No le gusta el ejercicio, prefiere el sofá y la comida.",
+                health: "Respiración difícil y úlceras en los ojos.",
+                funFact: "Un grupo de Pugs se llama 'Grumble' (un gruñido).",
+                stats: [30, 90, 40, 40],
+                img: "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?q=80&w=800"
+            },
+            {
+                name: "Pomerania", size: "pequeño", origin: "Polonia", life: "12-16 años", weight: "2-3 kg", colors: "Naranja",
+                desc: "Un zorro de juguete con mucha actitud. Audaz, curioso y ladrador. Se cree un perro grande.",
+                health: "Luxación de rótula y colapso traqueal.",
+                funFact: "Dos Pomeranias sobrevivieron al hundimiento del Titanic.",
+                stats: [60, 80, 60, 70],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRi8QQ9PT57yNr93MS416KCudgkJHH7M2ozneGNnhV9Lb7axVGZpiDz_ZGdt2KhsaCJp7ud7ACIZC8yMdk7nQS8g738EAOguglhS5Zjcka_&s=10"
+            },
+            {
+                name: "Boston Terrier", size: "pequeño", origin: "EE.UU.", life: "11-13 años", weight: "5-11 kg", colors: "Smoking (Negro/Blanco)",
+                desc: "El 'Caballero Americano'. Amigable, inteligente y bien vestido. Se adapta perfecto a la ciudad.",
+                health: "Cataratas y problemas respiratorios.",
+                funFact: "Fue la primera raza creada en Estados Unidos.",
+                stats: [60, 90, 70, 20],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpHjzXuQNquToAi6wwB9zHOC8cdDCgWm8g4gebAFO8WUwBrvz1BZYb153Ynw8-QYtvju_k_NhW7oX6AVFa5QMfDeuAOiGD_CQvJABj7g&s=10"
+            },
+            {
+                name: "Cocker Spaniel", size: "mediano", origin: "Inglaterra", life: "10-14 años", weight: "12-15 kg", colors: "Dorado, Negro",
+                desc: "Orejas largas y mirada dulce. Alegre y siempre moviendo la cola. Gran compañero y cazador.",
+                health: "Infecciones de oído frecuentes. Limpiar semanalmente.",
+                funFact: "La protagonista de 'La Dama y el Vagabundo'.",
+                stats: [80, 90, 70, 80],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbYHgBJ0sPk7q9fvF-k93-KdBlqdc6tXDEpA&s"
+            },
+            {
+                name: "Schnauzer Mini", size: "pequeño", origin: "Alemania", life: "12-15 años", weight: "5-9 kg", colors: "Sal y Pimienta",
+                desc: "Barbudo y cejudo. Alerta, enérgico y muy obediente. No suelta pelo.",
+                health: "Pancreatitis y cálculos urinarios.",
+                funFact: "Originalmente cazaban ratas en establos.",
+                stats: [70, 80, 85, 60],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoaEiBjQfYlFkGPcxZvsQDAJefLYMW-dh3nFsCmALB51wakI8HNdws0TZodolRG4s1bCWK1j5aSKPqYYiOgHSKnhSc-BKU6thIFKPoVkA&s=10"
+            },
+            {
+                name: "Pastor Australiano", size: "mediano", origin: "EE.UU.", life: "12-15 años", weight: "18-29 kg", colors: "Merle, Tricolor",
+                desc: "El perro de rodeo. Energía ilimitada. Necesita mucho trabajo mental y físico o destruirá la casa.",
+                health: "Epilepsia y sensibilidad a medicamentos.",
+                funFact: "Suelen tener ojos de diferente color (heterocromía).",
+                stats: [100, 80, 90, 60],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnNDoU1BeQDwc3_gylShIMCF-oYRF_KHiNtgPAVbqPKw3XPic3Jkfvfsai01Ndx4KpfbOuhSEK9jd3jyyt45tVgH5jC4szLknnYFYcSA&s=10"
+            
+            },
+            {
+                name: "Shiba Inu", size: "pequeño", origin: "Japón", life: "13-16 años", weight: "8-11 kg", colors: "Rojo, Sésamo",
+                desc: "Perro nacional de Japón. Parece un zorro y actúa como un gato. Independiente y muy limpio.",
+                health: "Alergias y glaucoma.",
+                funFact: "Es la cara del famoso meme 'Doge'.",
+                stats: [60, 40, 40, 40],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6cE3tQYstmXkWpB1UF2TIZv6uZo7PaE7jnmeJ4QgMJvg1Cl8GzMUj5iosf98GfI_QoTwVhPKUiKfCeu2ID-iCCQ5Q9k0Od5EKcyXFvQ&s=10"
+            },
+            {
+                name: "Akita Inu", size: "grande", origin: "Japón", life: "10-13 años", weight: "32-59 kg", colors: "Rojo, Blanco",
+                desc: "Grande, digno y silencioso. Extremadamente leal a su familia, pero dominante con otros perros.",
+                health: "Enfermedades autoinmunes.",
+                funFact: "Hachiko era un Akita.",
+                stats: [60, 80, 50, 50],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGq7QDVixU8CyE-oYumRGnkS3ZbaE7JrLIJXNEDKv_jtZ9Jn67lGaiLCqcX8prqIwl1rjD0TdQzLmX1I1QwyLn_ECNNM1xARQRxX2qmg&s=10"
+            },
+            {
+                name: "San Bernardo", size: "grande", origin: "Suiza", life: "8-10 años", weight: "64-82 kg", colors: "Rojo y Blanco",
+                desc: "El salvador de los Alpes. Enorme, babeante y con un corazón de oro. Ama a los niños.",
+                health: "Problemas de corazón y huesos.",
+                funFact: "Nunca llevaron barriles de brandy, eso es un mito.",
+                stats: [40, 95, 60, 60],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAfSMDNtq8KFbXqKzgfPTHCu2LK19GkrEQf1pX9aFs1WN6bl82qVYZyipTIgzLwsQchG8YMizm-7jmOygwG4Vaea5V5OsgvTllUuEtug&s=10"
+            },
+            {
+                name: "Malamute Alaska", size: "grande", origin: "EE.UU.", life: "10-14 años", weight: "34-39 kg", colors: "Gris, Negro",
+                desc: "La locomotora del ártico. Más fuerte que el Husky. Muy afectuoso con humanos, difícil con otros perros.",
+                health: "Displasia y cataratas.",
+                funFact: "Una de las razas más antiguas, casi sin cambios genéticos.",
+                stats: [90, 80, 40, 80],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUf9cpHEaPN8BWzLiKLNvVCd0rjzXvVhx8hA&s"
+            },
+            {
+                name: "Samoyedo", size: "mediano", origin: "Siberia", life: "12-14 años", weight: "23-30 kg", colors: "Blanco Puro",
+                desc: "La sonrisa eterna. Pelaje de nube y carácter gentil. Ladra mucho y suelta mucho pelo.",
+                health: "Diabetes y problemas renales.",
+                funFact: "Su lana se puede tejer para hacer ropa.",
+                stats: [80, 90, 60, 100],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9EaHs96qg3_g4-eZ-TE-GClF36MSh9V3pzy77n984FoNqGZH51krNjnIqiVWQ0Ou_GBY6tVrN6jho20GOzrMfzZazIkYJG3ftKDhdcRQ&s=10"
+            },
+            {
+                name: "Chow Chow", size: "mediano", origin: "China", life: "8-12 años", weight: "20-32 kg", colors: "Rojo, Negro",
+                desc: "Lengua azul y melena de león. Serio, distante y leal solo a su dueño.",
+                health: "Entropión (párpados hacia adentro).",
+                funFact: "Una de las razas más antiguas del mundo.",
+                stats: [30, 40, 40, 80],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRV_qsc-mBlVYjpYWaW18pr0K5Npk9UOabSvFLS9H7KEHXLvkcOXbSaFJwumSqPwl4uE4y1o-spOJYjzU-WkNjiMd6GXSIvWps4wIAIc4&s=10"
+            },
+            {
+                name: "Dálmata", size: "grande", origin: "Croacia", life: "11-13 años", weight: "20-32 kg", colors: "Blanco con Manchas",
+                desc: "Elegante y atlético. Famoso perro de bomberos. Tiene energía infinita.",
+                health: "Sordera hereditaria y cálculos urinarios.",
+                funFact: "Nacen blancos, las manchas salen después.",
+                stats: [100, 70, 60, 30],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSm9fb8KDc_wLDGReYFexPZcu--_s_uKGwIb1bB8_z5a57mD0PIzbEO9iF8aQlFUFNHDv3lkQ&s"
+            },
+            {
+                name: "Bulldog Inglés", size: "mediano", origin: "Inglaterra", life: "8-10 años", weight: "18-23 kg", colors: "Blanco, Rojo",
+                desc: "Símbolo de coraje. Gruñón por fuera, dulce por dentro. Ronca, babea y ama el sofá.",
+                health: "Muchos problemas respiratorios y de piel.",
+                funFact: "Usados antiguamente para pelear con toros.",
+                stats: [30, 90, 40, 50],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3uHm_lnS1FF4P9WhwDn9csHlkUcyptBH5wLiLCRIJTvJHo6D8T9bDQDZQMT4atrC3vNvQAiHaHTTIGUrHB4qWnujI1nOPbaN_xtJSD-0&s=10"
+            },
+            {
+                name: "Basset Hound", size: "mediano", origin: "Francia", life: "12-13 años", weight: "20-29 kg", colors: "Tricolor",
+                desc: "Patas cortas, orejas largas y mirada triste. Gran olfato, pero muy terco.",
+                health: "Problemas de espalda y oídos.",
+                funFact: "Sus orejas barren olores hacia su nariz.",
+                stats: [30, 90, 40, 50],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8phJEpmJUtX_zKdf_l9RLomyIc0YG6gxO7jVxWP-4vHItf9mFpHhrvod2Dyp4puOJqZETbCbx3OFKETijCvqQs70ZOLVcNCVJ7iiYog&s=10"
+            },
+            {
+                name: "Bichón Frisé", size: "pequeño", origin: "Francia", life: "14-15 años", weight: "3-5 kg", colors: "Blanco",
+                desc: "Nube de algodón alegre. Hipoalergénico, curioso y ama aprender trucos.",
+                health: "Alergias y cataratas.",
+                funFact: "Eran estrellas de circo en el siglo XIX.",
+                stats: [60, 90, 80, 90],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2I1u_jGocUEru6zV3ELUPMascExdCdQ22bjMdyQQP9IQT3BXAhJ_tmY8TB5bxxpyl2BSZdQn_tjjWTiKerXPLhyp6rVcWa5zIZ1sOuT0&s=10"
+            },
+            {
+                name: "Maltés", size: "pequeño", origin: "Malta", life: "12-15 años", weight: "3-4 kg", colors: "Blanco",
+                desc: "Aristócrata de pelo de seda. Valiente y muy apegado a su dueño.",
+                health: "Problemas dentales.",
+                funFact: "Los griegos les construían tumbas.",
+                stats: [50, 90, 60, 80],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRq_yQwkfhlDxaOZQiQ67UKyTrIwmiRf_rk16dt3idDA0tbRCEL442lrPbU4Unc-kXTOTYtMSP8bxGtkTU78jf7DI9oNoclxU1s4iDfqo&s=10"
+            },
+            {
+                name: "Bull Terrier", size: "mediano", origin: "Inglaterra", life: "12-13 años", weight: "22-38 kg", colors: "Blanco, Atigrado",
+                desc: "Cabeza de huevo. Gladiador divertido y obstinado. Muy fuerte.",
+                health: "Sordera y riñón.",
+                funFact: "Único perro con ojos triangulares.",
+                stats: [90, 80, 50, 20],
+                img: "https://www.purina.es/sites/default/files/2021-02/BREED%20Hero_0027_bull_terrier.jpg"
+            },
+            {
+                name: "Jack Russell", size: "pequeño", origin: "Inglaterra", life: "13-16 años", weight: "6-8 kg", colors: "Blanco y manchas",
+                desc: "Dinamita pura. Incansable, cazador y saltarín. No apto para sedentarios.",
+                health: "Rodillas y ojos.",
+                funFact: "Saltan 5 veces su altura.",
+                stats: [100, 70, 70, 30],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWrp8aabL_Woah30nQChpwR1HbfGZdROmv3ceN8c8sjVTZYdVMnBLQeDZ8dFmG43mC00MIveiakCHE2LSy4bk88kU03YhB9QlgtDLXBw&s=10"
+            },
+            {
+                name: "Galgo", size: "grande", origin: "Egipto", life: "10-13 años", weight: "27-40 kg", colors: "Varios",
+                desc: "El Ferrari canino. Corre a 70km/h pero duerme 18 horas al día.",
+                health: "Sensible a anestesia. Piel fina.",
+                funFact: "Mencionado en la Biblia.",
+                stats: [40, 80, 50, 20],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdIQGj5YjxCs9fTnmoY63-BB6u5m5sPoaO1Q&s"
+            },
+            {
+                name: "Mastín Napolitano", size: "grande", origin: "Italia", life: "7-9 años", weight: "50-70 kg", colors: "Gris",
+                desc: "Bestia de piel suelta. Lento, pesado y guardián temible.",
+                health: "Ojo de cereza y displasia.",
+                funFact: "Es la raza de Fang en Harry Potter.",
+                stats: [30, 80, 40, 60],
+                img: "https://www.purina.es/sites/default/files/styles/ttt_image_510/public/2024-02/sitesdefaultfilesstylessquare_medium_440x440public2022-07Neapolitan-Mastiff.jpg?itok=1EgmhAW1"
+            },
+            {
+                name: "Cane Corso", size: "grande", origin: "Italia", life: "9-12 años", weight: "40-50 kg", colors: "Negro",
+                desc: "Perro de guerra romano. Atlético, protector y seguro.",
+                health: "Displasia.",
+                funFact: "Significa 'Perro Guardaespaldas'.",
+                stats: [80, 80, 80, 20],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrbwC7upkQ5N7bq-r_JpnkE215EPd3hdpX-A&s"
+            },
+            {
+                name: "Shar Pei", size: "mediano", origin: "China", life: "8-12 años", weight: "18-25 kg", colors: "Crema",
+                desc: "Piel de lija y arrugas. Leal a su dueño, desconfiado con otros.",
+                health: "Problemas graves de piel.",
+                funFact: "Significa 'Piel de Arena'.",
+                stats: [40, 70, 50, 60],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7KKdywdELjp6PJTGjUT0zMknqSqxwa1ENgzLicVxKjJvs6_W0Rc7Fc5Ci1zWYG-y9LwmLbiGSo8LUBUuVRBwc2RPF6dXzCJS-tFo-awk&s=10"
+            },
+            {
+                name: "Weimaraner", size: "grande", origin: "Alemania", life: "10-13 años", weight: "25-40 kg", colors: "Gris",
+                desc: "El Fantasma Gris. Elegante, veloz y muy apegado (ansiedad por separación).",
+                health: "Torsión gástrica.",
+                funFact: "Nacen con rayas de tigre.",
+                stats: [90, 90, 80, 20],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShrzbpKhmBZySDKdzL99v13-Ag6kgXWhCXHhSIdepFKSg7mhZh1g_CYIu8ZJK49toRxGJCTNkHwXvX44uHbZXXODUYETSgcJwDL44diqQ&s=10"
+            },
+            {
+                name: "Papillon", size: "pequeño", origin: "Francia", life: "14-16 años", weight: "3-4 kg", colors: "Blanco y manchas",
+                desc: "Orejas de mariposa. Muy listo y ágil en deportes.",
+                health: "Rótula frágil.",
+                funFact: "Favorito de María Antonieta.",
+                stats: [70, 80, 90, 40],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQz4JcPrXQSaH6s3E0Vrcw-reY3y2p3cOQ-4Q&s"
+            },
+            {
+                name: "Cavalier King", size: "pequeño", origin: "Inglaterra", life: "12-15 años", weight: "5-8 kg", colors: "Tricolor",
+                desc: "El faldero definitivo. Ojos dulces y cola siempre en movimiento.",
+                health: "Problemas de corazón.",
+                funFact: "Tienen acceso real a edificios en UK.",
+                stats: [40, 100, 60, 50],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtj--oxJMFTw6arrl7DmjTi6Nxinh6t_GfjuZ4VC2h-5o8Sdd-Hk4o6boJEq_4NWXdHu252weIaMVD1qIFB78d6KdfN1RRlAkjA46a-g&s=10"
+            },
+            {
+                name: "Terranova", size: "grande", origin: "Canadá", life: "9-10 años", weight: "54-68 kg", colors: "Negro",
+                desc: "Gigante nadador. Paciencia infinita, la 'niñera' perfecta.",
+                health: "Corazón y babeo.",
+                funFact: "Salvó a Napoleón de ahogarse.",
+                stats: [50, 100, 70, 70],
+                img: "https://www.patasencasa.com/sites/default/files/2025-02/perro-terranova-cafe_0.jpg"
+            },
+            {
+                name: "Boyero de Berna", size: "grande", origin: "Suiza", life: "7-10 años", weight: "36-50 kg", colors: "Tricolor",
+                desc: "Oso de peluche tricolor. Ama el frío y tirar de carros.",
+                health: "Cáncer frecuente.",
+                funFact: "Tira 10 veces su peso.",
+                stats: [60, 90, 70, 60],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdrQaTMV9Mw5NRCi888imDfgWGf3vRDqPkH3bx9IfBvPj_-bi1K5DZGB2ley0-dP43wkZwxzMDp7btKh0BgmzgZU0IyG3C4AYSUeB-6Q&s=10"
+            },
+            {
+                name: "Vizsla", size: "mediano", origin: "Hungría", life: "12-14 años", weight: "20-29 kg", colors: "Óxido",
+                desc: "El perro velcro. Siempre tocando a su dueño. Atlético.",
+                health: "Epilepsia.",
+                funFact: "Casi extinto en la guerra.",
+                stats: [90, 100, 90, 20],
+                img: "https://www.purina.com/sites/default/files/2025-09/vizsla_4.jpg"
+            },
+            {
+                name: "Pitbull", size: "mediano", origin: "EE.UU.", life: "12-16 años", weight: "25-35 kg", colors: "Varios",
+                desc: "Atleta con gran sonrisa. Leal y cariñoso con humanos.",
+                health: "Piel sensible.",
+                funFact: "Antiguo perro niñera.",
+                stats: [80, 90, 70, 30],
+                img: "https://www.purina.es/sites/default/files/styles/ttt_image_510/public/2025-06/foto-portada-1-adobestock_753348629.jpg?itok=vZXqGzTO"
+            },
+            {
+                name: "Westie", size: "pequeño", origin: "Escocia", life: "13-15 años", weight: "6-9 kg", colors: "Blanco",
+                desc: "Blanco con autoestima alta. Cola de zanahoria.",
+                health: "Alergias piel.",
+                funFact: "Blancos para verlos al cazar.",
+                stats: [70, 70, 60, 60],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdEfhnCvt79lgwFMudC_trmZofrKAa0Zv4Bg&s"
+            },
+            {
+                name: "Pekinés", size: "pequeño", origin: "China", life: "12-14 años", weight: "3-6 kg", colors: "Dorado",
+                desc: "Alfombra flotante digna. Valiente y regio.",
+                health: "Ojos saltones.",
+                funFact: "Leyenda de león y mona.",
+                stats: [20, 70, 30, 70],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtZLziiQSPd3GC2IBKYYHJGCcTXYIOPGPRmysogkFaJQRARULWz4rRt6uzUOfcl6isAUM3a6gbHSyYemxh5hqhrFWLgL-zzl34sR0h2Y0&s=10"
+            },
+            {
+                name: "Malinois", size: "grande", origin: "Bélgica", life: "14-16 años", weight: "20-30 kg", colors: "Leonado",
+                desc: "El Fórmula 1 de los perros. Trabajo intenso.",
+                health: "Epilepsia.",
+                funFact: "Huele explosivos y cáncer.",
+                stats: [100, 80, 100, 30],
+                img: "https://misanimales.com/wp-content/uploads/2021/07/pastor-belga-malinois-tumbado-1024x768.jpg"
+            },
+            {
+                name: "Border Collie", size: "mediano", origin: "UK", life: "12-15 años", weight: "14-20 kg", colors: "Blanco/Negro",
+                desc: "El más listo del mundo. Mirada intensa.",
+                health: "Ojos.",
+                funFact: "Sabe 1000 palabras.",
+                stats: [100, 70, 100, 50],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRP3p15ld1CWAA9veMjrGDPzw0N29MPr_iC5g&s"
+            },
+            {
+                name: "Labrador", size: "grande", origin: "Canadá", life: "10-12 años", weight: "25-36 kg", colors: "Amarillo, Negro",
+                desc: "Raza #1. Ama la comida y el agua.",
+                health: "Obesidad.",
+                funFact: "Patas palmeadas.",
+                stats: [90, 100, 90, 40],
+                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvLzIG0wwFKip5gAJnVfIahVee4r6zD2l2dA&s"
+            },
+            {
+                name: "Sheltie", size: "pequeño", origin: "Escocia", life: "12-14 años", weight: "6-12 kg", colors: "Sable",
+                desc: "Collie miniatura. Vocal y obediente.",
+                health: "Ojos.",
+                funFact: "De islas con ponis enanos.",
+                stats: [80, 80, 90, 80],
+                img: "https://m.media-amazon.com/images/I/71ngebhzkUL._AC_UF1000,1000_QL80_.jpg"
+            }
+        ];
+
+        /* --- LÓGICA DE PROGRAMACIÓN --- */
+        const container = document.getElementById('cardsContainer');
+        const searchInput = document.getElementById('searchInput');
+        let currentFilter = 'all';
+
+        // Elementos Modal
+        const modal = document.getElementById('dogModal');
+        const modalElements = {
+            title: document.getElementById('modalTitle'), img: document.getElementById('modalImg'), origin: document.getElementById('modalOrigin'),
+            size: document.getElementById('modalSize'), weight: document.getElementById('modalWeight'), life: document.getElementById('modalLife'),
+            colors: document.getElementById('modalColors'), temp: document.getElementById('modalTemp'), desc: document.getElementById('modalDesc'),
+            health: document.getElementById('modalHealth'), funFact: document.getElementById('modalFunFact'),
+            barEnergy: document.getElementById('barEnergy'), barAffect: document.getElementById('barAffect'),
+            barTrain: document.getElementById('barTrain'), barGroom: document.getElementById('barGroom')
+        };
+
+        function renderDogs(data) {
+            container.innerHTML = ''; 
+            if (data.length === 0) {
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;opacity:0.6;font-size:1.2rem;">🐶 No encontramos esa raza.</div>';
+                return;
+            }
+            data.forEach(dog => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.onclick = () => openModal(dog);
+                card.innerHTML = `
+                    <div class="card-img-wrapper"><img src="${dog.img}" alt="${dog.name}" class="card-img" loading="lazy"></div>
+                    <div class="card-overlay">
+                        <h2 style="margin:0; font-size:1.4rem;">${dog.name}</h2>
+                        <span class="badge" style="margin-top:5px; display:inline-block;">${dog.size}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Búsqueda y Filtros
+        function applyFilters() {
+            const term = searchInput.value.toLowerCase();
+            const filtered = dogs.filter(d => d.name.toLowerCase().includes(term) && (currentFilter === 'all' || d.size === currentFilter));
+            renderDogs(filtered);
+        }
+        searchInput.addEventListener('input', applyFilters);
+        function filterDogs(size) {
+            currentFilter = size;
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFilters();
+        }
+
+        // Abrir Modal con Animación de Barras
+        function openModal(dog) {
+            modalElements.title.innerText = dog.name;
+            modalElements.img.src = dog.img;
+            modalElements.origin.innerText = "📍 " + dog.origin;
+            modalElements.size.innerText = dog.size; modalElements.weight.innerText = dog.weight;
+            modalElements.life.innerText = dog.life; modalElements.colors.innerText = dog.colors;
+            modalElements.temp.innerText = dog.stats[1] > 80 ? "Muy Cariñoso" : "Equilibrado"; // Simplificado
+            modalElements.desc.innerText = dog.desc; modalElements.health.innerText = dog.health; modalElements.funFact.innerText = dog.funFact;
+
+            // Resetear barras a 0
+            [modalElements.barEnergy, modalElements.barAffect, modalElements.barTrain, modalElements.barGroom].forEach(b => b.style.width = '0%');
+            
+            modal.style.display = 'flex';
+            
+            // Animar barras
+            setTimeout(() => {
+                modalElements.barEnergy.style.width = dog.stats[0] + "%";
+                modalElements.barAffect.style.width = dog.stats[1] + "%";
+                modalElements.barTrain.style.width = dog.stats[2] + "%";
+                modalElements.barGroom.style.width = dog.stats[3] + "%";
+            }, 100);
+        }
+        function closeModal() { modal.style.display = 'none'; }
+        window.onclick = e => { if (e.target == modal) closeModal(); }
+
+        // Modo Oscuro
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-toggle');
+            btn.innerText = document.body.classList.contains('dark-mode') ? "☀️ Modo Claro" : "🌙 Modo Oscuro";
+        }
+
+        // Veterinarias (Geolocalización Corregida)
+        function findVets() {
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización."); return;
+            }
+            const btn = document.querySelector('.btn-vet');
+            const txt = btn.innerHTML;
+            btn.innerHTML = "⏳ Ubicando...";
+            
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    // Corrección: Usar URL válida de búsqueda en Maps
+                    window.open(`https://www.google.com/maps/search/veterinarias/@${lat},${lng},14z`, '_blank');
+                    btn.innerHTML = txt;
+                },
+                () => { alert("No pudimos obtener tu ubicación."); btn.innerHTML = txt; }
+            );
+        }
+
+        // Iniciar
+        renderDogs(dogs);
+
+    </script>
+</body>
+</html>
